@@ -1,36 +1,26 @@
 {
   "project_info": {
-    "project_number": "123456789",
-    "project_id": "suporte-tecnico-default",
-    "storage_bucket": "suporte-tecnico-default.appspot.com"
+    "project_number": "381981641446",
+    "project_id": "app-faculdade-2eb28",
+    "storage_bucket": "app-faculdade-2eb28.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:123456789:android:0123456789abcdef",
+        "mobilesdk_app_id": "1:381981641446:android:f7cf75ac65dfbe3d6a4927",
         "android_client_info": {
           "package_name": "com.example.suporte"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "123456789-abcdefghijklmnopqrstuvwxyz123456.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIza-fake-key-replace-with-real-key"
+          "current_key": "AIzaSyCImiY3BDqtmqPFaIc1gDRioOQR3x4XQtM"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "123456789-abcdefghijklmnopqrstuvwxyz123456.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }

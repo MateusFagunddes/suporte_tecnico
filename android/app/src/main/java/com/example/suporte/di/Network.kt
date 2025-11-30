@@ -6,7 +6,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 
 object Network {
-    private const val BASE_URL = "http://10.0.2.2//suporte_tecnico//server/"
+    private const val BASE_URL = "https://braylen-kaolinic-tabularly.ngrok-free.dev//suporte_tecnico//server/"
     private val logger = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
     }

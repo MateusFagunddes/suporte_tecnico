@@ -10,7 +10,9 @@ $acao = isset($_GET['acao']) ? $_GET['acao'] : '';
 
 // Função para enviar notificação FCM
 function enviarNotificacao($fcm_token, $title, $body) {
-    $serverKey = 'YOUR_FCM_SERVER_KEY'; // Substitua pela sua chave do servidor FCM
+    // IMPORTANTE: Substitua pela sua chave real do servidor FCM
+    // Você pode obter esta chave no Console do Firebase -> Configurações do Projeto -> Cloud Messaging
+    $serverKey = 'chave';
 
     $notification = [
         'title' => $title,

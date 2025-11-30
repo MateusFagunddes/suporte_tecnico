@@ -37,7 +37,7 @@ class AppFirebaseService : FirebaseMessagingService() {
 
         if (userId != -1) {
             val retrofit = Retrofit.Builder()
-                .baseUrl("http://10.0.2.2/suporte_tecnico/server/")
+                .baseUrl("https://braylen-kaolinic-tabularly.ngrok-free.dev//suporte_tecnico//server/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
 

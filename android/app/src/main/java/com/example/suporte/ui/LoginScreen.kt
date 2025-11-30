@@ -7,6 +7,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.graphics.Color
 import com.google.firebase.messaging.FirebaseMessaging
 import android.util.Log
 
@@ -22,7 +24,16 @@ fun LoginScreen(vm: MainViewModel, onLogged: () -> Unit) {
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.Center) {
         if (modeRegister) {
-            OutlinedTextField(value = nome, onValueChange = { nome = it }, label = { Text("Nome") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(
+                value = nome,
+                onValueChange = { nome = it },
+                label = { Text("Nome") },
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
+                )
+            )
             Spacer(Modifier.height(8.dp))
 
             // Role selection
@@ -45,9 +56,28 @@ fun LoginScreen(vm: MainViewModel, onLogged: () -> Unit) {
             }
             Spacer(Modifier.height(8.dp))
         }
-        OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = email,
+            onValueChange = { email = it },
+            label = { Text("Email ou Usuário") },
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black
+            )
+        )
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(value = senha, onValueChange = { senha = it }, label = { Text("Senha") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = senha,
+            onValueChange = { senha = it },
+            label = { Text("Senha") },
+            modifier = Modifier.fillMaxWidth(),
+            visualTransformation = PasswordVisualTransformation(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black
+            )
+        )
         Spacer(Modifier.height(12.dp))
         Button(onClick = {
             loading = true

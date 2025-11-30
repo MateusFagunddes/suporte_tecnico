@@ -61,7 +61,7 @@ function notificarTecnicos($pdo, $titulo_chamado) {
         error_log("Tabela fcm_tokens não existe. Pulando notificações.");
         return;
     }
-    
+
     $stmt = $pdo->prepare("
         SELECT ft.fcm_token
         FROM fcm_tokens ft
@@ -86,7 +86,7 @@ function notificarDonoStatus($pdo, $chamado_id, $novo_status) {
         error_log("Tabela fcm_tokens não existe. Pulando notificações.");
         return;
     }
-    
+
     $stmt = $pdo->prepare("
         SELECT c.titulo, ft.fcm_token, u.nome
         FROM chamados c
@@ -270,18 +270,18 @@ if ($acao == 'excluir_chamado') {
 if ($acao == 'salvar_fcm_token') {
     $usuario_id = $_POST['usuario_id'] ?? null;
     $fcm_token = $_POST['fcm_token'] ?? '';
-    
+
     if (!$usuario_id || !$fcm_token) {
         echo json_encode(['status' => 'error', 'message' => 'Parâmetros obrigatórios ausentes']);
         exit;
     }
-    
+
     // Verificar se a tabela existe antes de tentar usar
     if (!tabelaFcmTokensExiste($pdo)) {
         echo json_encode(['status' => 'error', 'message' => 'Tabela fcm_tokens não existe. Execute o schema.sql primeiro.']);
         exit;
     }
-    
+
     $stmt = $pdo->prepare("INSERT INTO fcm_tokens (usuario_id, fcm_token) VALUES (?, ?) ON DUPLICATE KEY UPDATE fcm_token = VALUES(fcm_token)");
     $ok = $stmt->execute([$usuario_id, $fcm_token]);    echo json_encode(['status' => $ok ? 'ok' : 'error']);
     exit;

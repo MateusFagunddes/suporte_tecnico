@@ -6,6 +6,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.Alignment
 
 @Composable
 fun LoginScreen(vm: MainViewModel, onLogged: () -> Unit) {
@@ -13,12 +14,33 @@ fun LoginScreen(vm: MainViewModel, onLogged: () -> Unit) {
     var email by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
     var nome by remember { mutableStateOf("") }
+    var role by remember { mutableStateOf("usuario") }
     var loading by remember { mutableStateOf(false) }
     var modeRegister by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.Center) {
         if (modeRegister) {
             OutlinedTextField(value = nome, onValueChange = { nome = it }, label = { Text("Nome") }, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(8.dp))
+
+            // Role selection
+            Text("Tipo de usuário:", style = MaterialTheme.typography.labelMedium)
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    RadioButton(
+                        selected = role == "usuario",
+                        onClick = { role = "usuario" }
+                    )
+                    Text("Usuário")
+                }
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    RadioButton(
+                        selected = role == "tecnico",
+                        onClick = { role = "tecnico" }
+                    )
+                    Text("Técnico")
+                }
+            }
             Spacer(Modifier.height(8.dp))
         }
         OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") }, modifier = Modifier.fillMaxWidth())
@@ -28,13 +50,19 @@ fun LoginScreen(vm: MainViewModel, onLogged: () -> Unit) {
         Button(onClick = {
             loading = true
             if (modeRegister) {
-                vm.registrar(nome, email, senha) { res ->
+                vm.registrar(nome, email, senha, role) { res ->
                     loading = false
                     if (res != null && res["status"] == "ok") {
                         // salvar e prosseguir
                         val id = (res["id"] as Double).toInt()
+                        val userRole = res["role"]?.toString() ?: "usuario"
                         val prefs = context.getSharedPreferences("suporte_prefs", android.content.Context.MODE_PRIVATE)
-                        prefs.edit().putInt("user_id", id).putString("user_email", email).putString("user_name", nome).apply()
+                        prefs.edit()
+                            .putInt("user_id", id)
+                            .putString("user_email", email)
+                            .putString("user_name", nome)
+                            .putString("user_role", userRole)
+                            .apply()
                         onLogged()
                     } else {
                         // erro simples
@@ -47,8 +75,14 @@ fun LoginScreen(vm: MainViewModel, onLogged: () -> Unit) {
                     if (res != null && res.isNotEmpty()) {
                         val id = (res["id"] as Double).toInt()
                         val nome = res["nome"].toString()
+                        val userRole = res["role"]?.toString() ?: "usuario"
                         val prefs = context.getSharedPreferences("suporte_prefs", android.content.Context.MODE_PRIVATE)
-                        prefs.edit().putInt("user_id", id).putString("user_email", email).putString("user_name", nome).apply()
+                        prefs.edit()
+                            .putInt("user_id", id)
+                            .putString("user_email", email)
+                            .putString("user_name", nome)
+                            .putString("user_role", userRole)
+                            .apply()
                         onLogged()
                     } else {
                         // login inválido

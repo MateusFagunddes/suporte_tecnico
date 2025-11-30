@@ -6,9 +6,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 
 object Network {
-    // ALTERE AQUI para o seu servidor (ex: "http://10.0.2.2/")
-    private const val BASE_URL = "http://10.0.2.2/"
-
+    private const val BASE_URL = "http://10.0.2.2//suporte_tecnico//server/"
     private val logger = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
     }

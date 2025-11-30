@@ -27,5 +27,11 @@ class Repository(context: Context) {
     }
 
     suspend fun login(email: String, senha: String) = api.login(email, senha)
-    suspend fun registrar(nome: String, email: String, senha: String) = api.registrar(nome, email, senha)
+    suspend fun registrar(nome: String, email: String, senha: String, role: String = "usuario") = api.registrar(nome, email, senha, role)
+
+    suspend fun atualizarStatus(chamadoId: Int, status: String) {
+        api.atualizarStatus(chamadoId, status)
+        // re-sync
+        syncFromServer()
+    }
 }

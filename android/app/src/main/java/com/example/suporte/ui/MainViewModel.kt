@@ -51,13 +51,26 @@ class MainViewModel(private val context: Context) : ViewModel() {
         }
     }
 
-    fun registrar(nome: String, email: String, senha: String, onResult: (Map<String, Any>?) -> Unit) {
+    fun registrar(nome: String, email: String, senha: String, role: String = "usuario", onResult: (Map<String, Any>?) -> Unit) {
         viewModelScope.launch {
             try {
-                val res = repo.registrar(nome, email, senha)
+                val res = repo.registrar(nome, email, senha, role)
                 onResult(res)
             } catch (e: Exception) {
                 onResult(null)
+            }
+        }
+    }
+
+    fun atualizarStatus(chamadoId: Int, status: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                repo.atualizarStatus(chamadoId, status)
+                val local = repo.getLocalChamados()
+                _chamados.value = local
+                onResult(true)
+            } catch (e: Exception) {
+                onResult(false)
             }
         }
     }

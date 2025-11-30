@@ -27,6 +27,14 @@ interface ApiService {
     suspend fun registrar(
         @Field("nome") nome: String,
         @Field("email") email: String,
-        @Field("senha") senha: String
+        @Field("senha") senha: String,
+        @Field("role") role: String = "usuario"
+    ): Map<String, Any>
+
+    @FormUrlEncoded
+    @POST("api.php?acao=atualizar_status")
+    suspend fun atualizarStatus(
+        @Field("chamado_id") chamadoId: Int,
+        @Field("status") status: String
     ): Map<String, Any>
 }

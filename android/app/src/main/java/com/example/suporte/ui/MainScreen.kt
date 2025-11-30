@@ -3,11 +3,16 @@ package com.example.suporte.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.Alignment
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.suporte.db.ChamadoEntity
 
@@ -20,11 +25,46 @@ fun MainScreen(vm: MainViewModel) {
     val context = LocalContext.current
     val prefs = context.getSharedPreferences("suporte_prefs", android.content.Context.MODE_PRIVATE)
     val userId = prefs.getInt("user_id", -1)
+    val userName = prefs.getString("user_name", "Usuário") ?: "Usuário"
+    val userRole = prefs.getString("user_role", "usuario") ?: "usuario"
 
     LaunchedEffect(Unit) { vm.carregar() }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Suporte Técnico") }) },
+        topBar = {
+            TopAppBar(
+                title = {
+                    Column {
+                        Text("Suporte Técnico")
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                "$userName (${if (userRole == "tecnico") "Técnico" else "Usuário"})",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            if (userRole == "tecnico") {
+                                Icon(
+                                    imageVector = Icons.Default.Build,
+                                    contentDescription = "Técnico",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { vm.carregar() }) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Atualizar"
+                        )
+                    }
+                }
+            )
+        },
         content = { padding ->
             Column(modifier = Modifier.padding(padding).padding(12.dp)) {
                 OutlinedTextField(value = titulo, onValueChange = { titulo = it }, label = { Text("Título") }, modifier = Modifier.fillMaxWidth())
@@ -42,10 +82,34 @@ fun MainScreen(vm: MainViewModel) {
                 }
 
                 Spacer(Modifier.height(16.dp))
-                Text("Chamados", style = MaterialTheme.typography.headlineSmall)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Chamados", style = MaterialTheme.typography.headlineSmall)
+                    IconButton(onClick = { vm.carregar() }) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Atualizar chamados"
+                        )
+                    }
+                }
                 Spacer(Modifier.height(8.dp))
                 LazyColumn {
-                    items(chamados) { chamado -> ChamadoItem(chamado) }
+                    items(chamados) { chamado ->
+                        ChamadoItemWithStatus(
+                            chamado = chamado,
+                            isTecnico = userRole == "tecnico",
+                            onStatusChange = { novoStatus ->
+                                vm.atualizarStatus(chamado.id, novoStatus) { success ->
+                                    if (success) {
+                                        // Status atualizado com sucesso
+                                    }
+                                }
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -53,14 +117,23 @@ fun MainScreen(vm: MainViewModel) {
 }
 
 @Composable
-fun ChamadoItem(chamado: ChamadoEntity) {
+fun ChamadoItem(chamado: ChamadoEntity, isTecnico: Boolean = false) {
     Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text(chamado.titulo, style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(4.dp))
             Text(chamado.descricao, maxLines = 3)
             Spacer(Modifier.height(6.dp))
-            Text("Status: ${'$'}{chamado.status}")
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("Status: ${chamado.status}")
+                if (isTecnico && chamado.usuario_id != null) {
+                    Text("ID: ${chamado.usuario_id}", style = MaterialTheme.typography.bodySmall)
+                }
+            }
+            if (isTecnico) {
+                Spacer(Modifier.height(4.dp))
+                Text("Data: ${chamado.data_abertura}", style = MaterialTheme.typography.bodySmall)
+            }
         }
     }
 }

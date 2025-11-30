@@ -9,6 +9,13 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import android.content.Context
+import android.content.SharedPreferences
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import com.example.suporte.di.ApiService
 
 class AppFirebaseService : FirebaseMessagingService() {
     override fun onMessageReceived(message: RemoteMessage) {
@@ -21,7 +28,34 @@ class AppFirebaseService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         Log.d("FCM", "Novo token: $token")
-        // envie para seu servidor se precisar
+        sendTokenToServer(token)
+    }
+
+    private fun sendTokenToServer(token: String) {
+        val sharedPreferences: SharedPreferences = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
+        val userId = sharedPreferences.getInt("user_id", -1)
+
+        if (userId != -1) {
+            val retrofit = Retrofit.Builder()
+                .baseUrl("http://10.0.2.2/suporte_tecnico/server/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+
+            val apiService = retrofit.create(ApiService::class.java)
+
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val response = apiService.salvarFcmToken(userId, token)
+                    if (response["status"] == "ok") {
+                        Log.d("FCM", "Token enviado com sucesso para o servidor")
+                    } else {
+                        Log.e("FCM", "Erro ao enviar token para o servidor")
+                    }
+                } catch (e: Exception) {
+                    Log.e("FCM", "Erro ao enviar token: ${e.message}")
+                }
+            }
+        }
     }
 
     private fun showNotification(title: String, body: String) {

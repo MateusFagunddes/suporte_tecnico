@@ -10,11 +10,27 @@ class Repository(context: Context) {
     private val api = Network.retrofit.create(ApiService::class.java)
     private val db = AppDatabase.getInstance(context)
     private val dao = db.chamadoDao()
+    private val prefs = context.getSharedPreferences("suporte_prefs", android.content.Context.MODE_PRIVATE)
 
     // fetch from server, update local DB
     suspend fun syncFromServer() {
-        val list = api.listarChamados()
+        val userId = prefs.getInt("user_id", -1)
+        val userRole = prefs.getString("user_role", "usuario") ?: "usuario"
+
+        val list = if (userRole == "tecnico") {
+            // Técnicos veem todos os chamados
+            api.listarChamados(userRole = "tecnico")
+        } else {
+            // Usuários veem apenas os seus
+            if (userId != -1) {
+                api.listarChamados(usuarioId = userId, userRole = "usuario")
+            } else {
+                emptyList()
+            }
+        }
+
         val entities = list.map { ChamadoEntity(it.id, it.titulo, it.descricao, it.status, it.data_abertura, it.usuario_id) }
+        dao.clear() // Limpar antes de inserir novos dados filtrados
         dao.insertAll(entities)
     }
 
@@ -34,4 +50,22 @@ class Repository(context: Context) {
         // re-sync
         syncFromServer()
     }
+
+    suspend fun editarChamado(chamadoId: Int, titulo: String, descricao: String) {
+        val userId = prefs.getInt("user_id", -1)
+        val userRole = prefs.getString("user_role", "usuario") ?: "usuario"
+        api.editarChamado(chamadoId, titulo, descricao, userId, userRole)
+        // re-sync
+        syncFromServer()
+    }
+
+    suspend fun excluirChamado(chamadoId: Int) {
+        val userId = prefs.getInt("user_id", -1)
+        val userRole = prefs.getString("user_role", "usuario") ?: "usuario"
+        api.excluirChamado(chamadoId, userId, userRole)
+        // re-sync
+        syncFromServer()
+    }
+
+    suspend fun salvarFcmToken(usuarioId: Int, token: String) = api.salvarFcmToken(usuarioId, token)
 }

@@ -4,8 +4,12 @@ import com.example.suporte.model.Chamado
 import retrofit2.http.*
 
 interface ApiService {
-    @GET("api.php?acao=listar")
-    suspend fun listarChamados(): List<Chamado>
+    @GET("api.php")
+    suspend fun listarChamados(
+        @Query("acao") acao: String = "listar",
+        @Query("usuario_id") usuarioId: Int? = null,
+        @Query("user_role") userRole: String = "usuario"
+    ): List<Chamado>
 
     @FormUrlEncoded
     @POST("api.php?acao=criar")
@@ -36,5 +40,30 @@ interface ApiService {
     suspend fun atualizarStatus(
         @Field("chamado_id") chamadoId: Int,
         @Field("status") status: String
+    ): Map<String, Any>
+
+    @FormUrlEncoded
+    @POST("api.php?acao=editar_chamado")
+    suspend fun editarChamado(
+        @Field("chamado_id") chamadoId: Int,
+        @Field("titulo") titulo: String,
+        @Field("descricao") descricao: String,
+        @Field("usuario_id") usuarioId: Int,
+        @Field("user_role") userRole: String
+    ): Map<String, Any>
+
+    @FormUrlEncoded
+    @POST("api.php?acao=excluir_chamado")
+    suspend fun excluirChamado(
+        @Field("chamado_id") chamadoId: Int,
+        @Field("usuario_id") usuarioId: Int,
+        @Field("user_role") userRole: String
+    ): Map<String, Any>
+
+    @FormUrlEncoded
+    @POST("api.php?acao=salvar_fcm_token")
+    suspend fun salvarFcmToken(
+        @Field("usuario_id") usuarioId: Int,
+        @Field("fcm_token") fcmToken: String
     ): Map<String, Any>
 }

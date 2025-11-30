@@ -39,6 +39,7 @@ fun AppNavHost() {
         // Telas principais com sidebar
         composable("main") {
             currentRoute = "main"
+            val userRole = getUserRole(context)
             MainLayout(
                 currentRoute = currentRoute,
                 onNavigate = { route ->
@@ -55,12 +56,13 @@ fun AppNavHost() {
                     }
                 }
             ) {
-                DashboardScreen(vm = vm)
+                DashboardScreen(vm = vm, userRole = userRole)
             }
         }
 
         composable("chamados") {
             currentRoute = "chamados"
+            val userRole = getUserRole(context)
             MainLayout(
                 currentRoute = currentRoute,
                 onNavigate = { route ->
@@ -77,7 +79,7 @@ fun AppNavHost() {
                     }
                 }
             ) {
-                ChamadosScreen(vm = vm)
+                ChamadosScreen(vm = vm, userRole = userRole)
             }
         }
 
@@ -186,4 +188,10 @@ fun AppNavHost() {
 fun vmIsLogged(context: android.content.Context): Boolean {
     val prefs = context.getSharedPreferences("suporte_prefs", android.content.Context.MODE_PRIVATE)
     return prefs.getInt("user_id", -1) != -1
+}
+
+// função para obter role do usuário
+fun getUserRole(context: android.content.Context): String {
+    val prefs = context.getSharedPreferences("suporte_prefs", android.content.Context.MODE_PRIVATE)
+    return prefs.getString("user_role", "usuario") ?: "usuario"
 }

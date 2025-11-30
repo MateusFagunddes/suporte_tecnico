@@ -15,6 +15,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.suporte.db.ChamadoEntity
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -98,14 +100,25 @@ fun MainScreen(vm: MainViewModel) {
                 Spacer(Modifier.height(8.dp))
                 LazyColumn {
                     items(chamados) { chamado ->
-                        ChamadoItemWithStatus(
+                        ChamadoItemWithActions(
                             chamado = chamado,
                             isTecnico = userRole == "tecnico",
+                            currentUserId = userId,
                             onStatusChange = { novoStatus ->
                                 vm.atualizarStatus(chamado.id, novoStatus) { success ->
                                     if (success) {
                                         // Status atualizado com sucesso
                                     }
+                                }
+                            },
+                            onEdit = { titulo, descricao ->
+                                vm.editarChamado(chamado.id, titulo, descricao) { success ->
+                                    // Chamado editado
+                                }
+                            },
+                            onDelete = {
+                                vm.excluirChamado(chamado.id) { success ->
+                                    // Chamado excluído
                                 }
                             }
                         )
@@ -114,6 +127,21 @@ fun MainScreen(vm: MainViewModel) {
             }
         }
     )
+}
+
+// Função para formatar data no padrão brasileiro
+fun formatarData(dataString: String): String {
+    return try {
+        // Formato de entrada do servidor (assumindo ISO ou MySQL datetime)
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        val outputFormat = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
+
+        val date = inputFormat.parse(dataString)
+        outputFormat.format(date ?: Date())
+    } catch (e: Exception) {
+        // Se não conseguir formatar, retorna a string original
+        dataString
+    }
 }
 
 @Composable
@@ -132,7 +160,7 @@ fun ChamadoItem(chamado: ChamadoEntity, isTecnico: Boolean = false) {
             }
             if (isTecnico) {
                 Spacer(Modifier.height(4.dp))
-                Text("Data: ${chamado.data_abertura}", style = MaterialTheme.typography.bodySmall)
+                Text("Data: ${formatarData(chamado.data_abertura)}", style = MaterialTheme.typography.bodySmall)
             }
         }
     }

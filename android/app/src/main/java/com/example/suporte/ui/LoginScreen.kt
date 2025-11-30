@@ -7,6 +7,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
+import com.google.firebase.messaging.FirebaseMessaging
+import android.util.Log
 
 @Composable
 fun LoginScreen(vm: MainViewModel, onLogged: () -> Unit) {
@@ -63,6 +65,16 @@ fun LoginScreen(vm: MainViewModel, onLogged: () -> Unit) {
                             .putString("user_name", nome)
                             .putString("user_role", userRole)
                             .apply()
+
+                        // Registrar token FCM
+                        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                val token = task.result
+                                vm.salvarFcmToken(id, token)
+                                Log.d("FCM", "Token registrado no login: $token")
+                            }
+                        }
+
                         onLogged()
                     } else {
                         // erro simples
@@ -83,6 +95,16 @@ fun LoginScreen(vm: MainViewModel, onLogged: () -> Unit) {
                             .putString("user_name", nome)
                             .putString("user_role", userRole)
                             .apply()
+
+                        // Registrar token FCM
+                        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                val token = task.result
+                                vm.salvarFcmToken(id, token)
+                                Log.d("FCM", "Token registrado no login: $token")
+                            }
+                        }
+
                         onLogged()
                     } else {
                         // login inválido

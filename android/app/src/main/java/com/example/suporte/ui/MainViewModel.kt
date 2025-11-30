@@ -74,4 +74,41 @@ class MainViewModel(private val context: Context) : ViewModel() {
             }
         }
     }
+
+    fun editarChamado(chamadoId: Int, titulo: String, descricao: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                repo.editarChamado(chamadoId, titulo, descricao)
+                val local = repo.getLocalChamados()
+                _chamados.value = local
+                onResult(true)
+            } catch (e: Exception) {
+                onResult(false)
+            }
+        }
+    }
+
+    fun excluirChamado(chamadoId: Int, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                repo.excluirChamado(chamadoId)
+                val local = repo.getLocalChamados()
+                _chamados.value = local
+                onResult(true)
+            } catch (e: Exception) {
+                onResult(false)
+            }
+        }
+    }
+
+    fun salvarFcmToken(usuarioId: Int, token: String) {
+        viewModelScope.launch {
+            try {
+                repo.salvarFcmToken(usuarioId, token)
+            } catch (e: Exception) {
+                // Log erro mas não interrompe o fluxo
+                android.util.Log.e("FCM", "Erro ao salvar token: ${e.message}")
+            }
+        }
+    }
 }

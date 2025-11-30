@@ -8,8 +8,125 @@ $pdo = new PDO("mysql:host=localhost;dbname=suporte_tecnico;charset=utf8","root"
 
 $acao = isset($_GET['acao']) ? $_GET['acao'] : '';
 
+// Função para enviar notificação FCM
+function enviarNotificacao($fcm_token, $title, $body) {
+    $serverKey = 'YOUR_FCM_SERVER_KEY'; // Substitua pela sua chave do servidor FCM
+
+    $notification = [
+        'title' => $title,
+        'body' => $body,
+        'icon' => 'ic_notification',
+        'sound' => 'default'
+    ];
+
+    $data = [
+        'to' => $fcm_token,
+        'notification' => $notification,
+        'data' => [
+            'message' => $body
+        ]
+    ];
+
+    $headers = [
+        'Authorization: key=' . $serverKey,
+        'Content-Type: application/json'
+    ];
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, 'https://fcm.googleapis.com/fcm/send');
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+
+    $result = curl_exec($ch);
+    curl_close($ch);
+
+    return $result;
+}
+
+// Função para verificar se a tabela fcm_tokens existe
+function tabelaFcmTokensExiste($pdo) {
+    try {
+        $stmt = $pdo->query("SHOW TABLES LIKE 'fcm_tokens'");
+        return $stmt->rowCount() > 0;
+    } catch (Exception $e) {
+        return false;
+    }
+}
+
+// Função para notificar técnicos sobre novo chamado
+function notificarTecnicos($pdo, $titulo_chamado) {
+    if (!tabelaFcmTokensExiste($pdo)) {
+        error_log("Tabela fcm_tokens não existe. Pulando notificações.");
+        return;
+    }
+    
+    $stmt = $pdo->prepare("
+        SELECT ft.fcm_token
+        FROM fcm_tokens ft
+        JOIN usuarios u ON ft.usuario_id = u.id
+        WHERE u.role = 'tecnico' AND ft.fcm_token IS NOT NULL
+    ");
+    $stmt->execute();
+    $tecnicos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($tecnicos as $tecnico) {
+        enviarNotificacao(
+            $tecnico['fcm_token'],
+            'Novo Chamado',
+            "Um novo chamado foi criado: $titulo_chamado"
+        );
+    }
+}
+
+// Função para notificar dono do chamado sobre mudança de status
+function notificarDonoStatus($pdo, $chamado_id, $novo_status) {
+    if (!tabelaFcmTokensExiste($pdo)) {
+        error_log("Tabela fcm_tokens não existe. Pulando notificações.");
+        return;
+    }
+    
+    $stmt = $pdo->prepare("
+        SELECT c.titulo, ft.fcm_token, u.nome
+        FROM chamados c
+        JOIN usuarios u ON c.usuario_id = u.id
+        JOIN fcm_tokens ft ON u.id = ft.usuario_id
+        WHERE c.id = ? AND ft.fcm_token IS NOT NULL
+    ");
+    $stmt->execute([$chamado_id]);
+    $chamado = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($chamado) {
+        enviarNotificacao(
+            $chamado['fcm_token'],
+            'Status do Chamado Atualizado',
+            "Seu chamado '{$chamado['titulo']}' foi alterado para: $novo_status"
+        );
+    }
+}
+
+$acao = isset($_GET['acao']) ? $_GET['acao'] : '';
+
 if ($acao == 'listar') {
-    $stmt = $pdo->query("SELECT c.*, u.nome as nome_usuario FROM chamados c LEFT JOIN usuarios u ON c.usuario_id = u.id ORDER BY c.data_abertura DESC");
+    $usuario_id = $_GET['usuario_id'] ?? null;
+    $user_role = $_GET['user_role'] ?? 'usuario';
+
+    if ($user_role == 'tecnico') {
+        // Técnicos veem todos os chamados
+        $stmt = $pdo->query("SELECT c.*, u.nome as nome_usuario FROM chamados c LEFT JOIN usuarios u ON c.usuario_id = u.id ORDER BY c.data_abertura DESC");
+    } else {
+        // Usuários veem apenas seus próprios chamados
+        if ($usuario_id) {
+            $stmt = $pdo->prepare("SELECT c.*, u.nome as nome_usuario FROM chamados c LEFT JOIN usuarios u ON c.usuario_id = u.id WHERE c.usuario_id = ? ORDER BY c.data_abertura DESC");
+            $stmt->execute([$usuario_id]);
+        } else {
+            // Se não tiver usuario_id, retorna array vazio
+            echo json_encode([]);
+            exit;
+        }
+    }
+
     echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
     exit;
 }
@@ -20,6 +137,12 @@ if ($acao == 'criar') {
     $usuario_id = $_POST['usuario_id'] ?? null;
     $stmt = $pdo->prepare("INSERT INTO chamados (titulo, descricao, usuario_id) VALUES (?, ?, ?)");
     $ok = $stmt->execute([$titulo, $descricao, $usuario_id]);
+
+    if ($ok) {
+        // Notificar técnicos sobre novo chamado
+        notificarTecnicos($pdo, $titulo);
+    }
+
     echo json_encode(['status' => $ok ? 'ok' : 'error']);
     exit;
 }
@@ -64,9 +187,104 @@ if ($acao == 'atualizar_status') {
 
     $stmt = $pdo->prepare("UPDATE chamados SET status = ? WHERE id = ?");
     $ok = $stmt->execute([$status, $chamado_id]);
+
+    if ($ok) {
+        // Notificar dono do chamado sobre mudança de status
+        notificarDonoStatus($pdo, $chamado_id, $status);
+    }
+
     echo json_encode(['status' => $ok ? 'ok' : 'error']);
     exit;
 }
 
+if ($acao == 'editar_chamado') {
+    $chamado_id = $_POST['chamado_id'] ?? '';
+    $titulo = $_POST['titulo'] ?? '';
+    $descricao = $_POST['descricao'] ?? '';
+    $usuario_id = $_POST['usuario_id'] ?? null;
+    $user_role = $_POST['user_role'] ?? 'usuario';
+
+    // Verificar permissões
+    $stmt = $pdo->prepare("SELECT usuario_id, status FROM chamados WHERE id = ?");
+    $stmt->execute([$chamado_id]);
+    $chamado = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$chamado) {
+        echo json_encode(['status' => 'error', 'message' => 'Chamado não encontrado']);
+        exit;
+    }
+
+    // Regras de permissão
+    $pode_editar = false;
+    if ($user_role == 'tecnico') {
+        $pode_editar = true; // Técnico pode editar qualquer chamado
+    } else if ($chamado['usuario_id'] == $usuario_id && $chamado['status'] == 'aberto') {
+        $pode_editar = true; // Usuário pode editar seus chamados abertos
+    }
+
+    if (!$pode_editar) {
+        echo json_encode(['status' => 'error', 'message' => 'Sem permissão para editar este chamado']);
+        exit;
+    }
+
+    $stmt = $pdo->prepare("UPDATE chamados SET titulo = ?, descricao = ? WHERE id = ?");
+    $ok = $stmt->execute([$titulo, $descricao, $chamado_id]);
+    echo json_encode(['status' => $ok ? 'ok' : 'error']);
+    exit;
+}
+
+if ($acao == 'excluir_chamado') {
+    $chamado_id = $_POST['chamado_id'] ?? '';
+    $usuario_id = $_POST['usuario_id'] ?? null;
+    $user_role = $_POST['user_role'] ?? 'usuario';
+
+    // Verificar permissões
+    $stmt = $pdo->prepare("SELECT usuario_id, status FROM chamados WHERE id = ?");
+    $stmt->execute([$chamado_id]);
+    $chamado = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$chamado) {
+        echo json_encode(['status' => 'error', 'message' => 'Chamado não encontrado']);
+        exit;
+    }
+
+    // Regras de permissão
+    $pode_excluir = false;
+    if ($user_role == 'tecnico') {
+        $pode_excluir = true; // Técnico pode excluir qualquer chamado
+    } else if ($chamado['usuario_id'] == $usuario_id && $chamado['status'] == 'aberto') {
+        $pode_excluir = true; // Usuário pode excluir seus chamados abertos
+    }
+
+    if (!$pode_excluir) {
+        echo json_encode(['status' => 'error', 'message' => 'Sem permissão para excluir este chamado']);
+        exit;
+    }
+
+    $stmt = $pdo->prepare("DELETE FROM chamados WHERE id = ?");
+    $ok = $stmt->execute([$chamado_id]);
+    echo json_encode(['status' => $ok ? 'ok' : 'error']);
+    exit;
+}
+
+if ($acao == 'salvar_fcm_token') {
+    $usuario_id = $_POST['usuario_id'] ?? null;
+    $fcm_token = $_POST['fcm_token'] ?? '';
+    
+    if (!$usuario_id || !$fcm_token) {
+        echo json_encode(['status' => 'error', 'message' => 'Parâmetros obrigatórios ausentes']);
+        exit;
+    }
+    
+    // Verificar se a tabela existe antes de tentar usar
+    if (!tabelaFcmTokensExiste($pdo)) {
+        echo json_encode(['status' => 'error', 'message' => 'Tabela fcm_tokens não existe. Execute o schema.sql primeiro.']);
+        exit;
+    }
+    
+    $stmt = $pdo->prepare("INSERT INTO fcm_tokens (usuario_id, fcm_token) VALUES (?, ?) ON DUPLICATE KEY UPDATE fcm_token = VALUES(fcm_token)");
+    $ok = $stmt->execute([$usuario_id, $fcm_token]);    echo json_encode(['status' => $ok ? 'ok' : 'error']);
+    exit;
+}
+
 echo json_encode(['error' => 'acao inválida']);
-?>

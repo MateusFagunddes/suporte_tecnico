@@ -116,11 +116,11 @@ if ($acao == 'listar') {
 
     if ($user_role == 'tecnico') {
         // Técnicos veem todos os chamados
-        $stmt = $pdo->query("SELECT c.*, u.nome as nome_usuario FROM chamados c LEFT JOIN usuarios u ON c.usuario_id = u.id ORDER BY c.data_abertura DESC");
+        $stmt = $pdo->query("SELECT c.*, u.nome as nome_usuario, u.email as email_usuario FROM chamados c LEFT JOIN usuarios u ON c.usuario_id = u.id ORDER BY c.data_abertura DESC");
     } else {
         // Usuários veem apenas seus próprios chamados
         if ($usuario_id) {
-            $stmt = $pdo->prepare("SELECT c.*, u.nome as nome_usuario FROM chamados c LEFT JOIN usuarios u ON c.usuario_id = u.id WHERE c.usuario_id = ? ORDER BY c.data_abertura DESC");
+            $stmt = $pdo->prepare("SELECT c.*, u.nome as nome_usuario, u.email as email_usuario FROM chamados c LEFT JOIN usuarios u ON c.usuario_id = u.id WHERE c.usuario_id = ? ORDER BY c.data_abertura DESC");
             $stmt->execute([$usuario_id]);
         } else {
             // Se não tiver usuario_id, retorna array vazio

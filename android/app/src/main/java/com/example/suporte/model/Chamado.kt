@@ -7,5 +7,6 @@ data class Chamado(
     val status: String,
     val data_abertura: String,
     val usuario_id: Int?,
-    val nome_usuario: String?
+    val nome_usuario: String?,
+    val email_usuario: String?
 )

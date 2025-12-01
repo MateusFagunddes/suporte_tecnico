@@ -154,8 +154,8 @@ fun ChamadoItem(chamado: ChamadoEntity, isTecnico: Boolean = false) {
             Spacer(Modifier.height(6.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("Status: ${chamado.status}")
-                if (isTecnico && chamado.usuario_id != null) {
-                    Text("ID: ${chamado.usuario_id}", style = MaterialTheme.typography.bodySmall)
+                if (isTecnico && chamado.email_usuario != null) {
+                    Text("Usuário: ${getEmailPrefix(chamado.email_usuario)}", style = MaterialTheme.typography.bodySmall)
                 }
             }
             if (isTecnico) {

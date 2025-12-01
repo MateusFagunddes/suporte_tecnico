@@ -41,7 +41,7 @@ fun Sidebar(
         MenuItem("Dashboard", Icons.Default.Home, "main"),
         MenuItem("Chamados", Icons.Default.List, "chamados"),
         MenuItem("Novo Chamado", Icons.Default.Add, "novo_chamado"),
-        MenuItem("Relatórios", Icons.Default.Info, "relatorios"),
+        // MenuItem("Relatórios", Icons.Default.Info, "relatorios"),
         MenuItem("Configurações", Icons.Default.Settings, "configuracoes"),
     )
 

@@ -29,6 +29,7 @@ fun LoginScreen(vm: MainViewModel, onLogged: () -> Unit) {
     var modeRegister by remember { mutableStateOf(false) }
     var emailError by remember { mutableStateOf<String?>(null) }
     var successMessage by remember { mutableStateOf<String?>(null) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     // Validar email quando o usuário digita (somente no modo registro)
     LaunchedEffect(email, modeRegister) {
@@ -46,9 +47,28 @@ fun LoginScreen(vm: MainViewModel, onLogged: () -> Unit) {
         if (modeRegister) {
             successMessage = null
         }
+
+        // Limpar mensagem de erro quando mudar de modo
+        errorMessage = null
     }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.Center) {
+
+        // Mensagem de erro
+        if (errorMessage != null) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+            ) {
+                Text(
+                    text = errorMessage!!,
+                    modifier = Modifier.padding(16.dp),
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+            Spacer(Modifier.height(16.dp))
+        }
 
         // Mensagem de sucesso após cadastro
         if (successMessage != null) {
@@ -105,9 +125,12 @@ fun LoginScreen(vm: MainViewModel, onLogged: () -> Unit) {
             value = email,
             onValueChange = {
                 email = it
-                // Limpar mensagem de sucesso quando usuário começar a digitar
+                // Limpar mensagens quando usuário começar a digitar
                 if (!modeRegister && successMessage != null) {
                     successMessage = null
+                }
+                if (!modeRegister && errorMessage != null) {
+                    errorMessage = null
                 }
             },
             label = { Text(if (modeRegister) "Email" else "Email ou Usuário") },
@@ -133,7 +156,13 @@ fun LoginScreen(vm: MainViewModel, onLogged: () -> Unit) {
         Spacer(Modifier.height(8.dp))
         OutlinedTextField(
             value = senha,
-            onValueChange = { senha = it },
+            onValueChange = {
+                senha = it
+                // Limpar mensagem de erro quando usuário digitar senha
+                if (!modeRegister && errorMessage != null) {
+                    errorMessage = null
+                }
+            },
             label = { Text("Senha") },
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = PasswordVisualTransformation(),
@@ -164,6 +193,7 @@ fun LoginScreen(vm: MainViewModel, onLogged: () -> Unit) {
             }
 
             loading = true
+            errorMessage = null // Limpar erro anterior
             if (modeRegister) {
                 vm.registrar(nome, email, senha, role) { res ->
                     loading = false
@@ -180,6 +210,7 @@ fun LoginScreen(vm: MainViewModel, onLogged: () -> Unit) {
                         // O usuário deve fazer login manualmente após cadastro
                     } else {
                         // erro no cadastro
+                        errorMessage = res?.get("message")?.toString() ?: "Erro ao criar usuário. Tente novamente."
                         loading = false
                     }
                 }
@@ -210,6 +241,7 @@ fun LoginScreen(vm: MainViewModel, onLogged: () -> Unit) {
                         onLogged()
                     } else {
                         // login inválido
+                        errorMessage = "Email/usuário ou senha incorretos. Verifique os dados e tente novamente."
                     }
                 }
             }
@@ -230,6 +262,18 @@ fun LoginScreen(vm: MainViewModel, onLogged: () -> Unit) {
         Spacer(Modifier.height(8.dp))
         TextButton(onClick = { modeRegister = !modeRegister }) {
             Text(if (modeRegister) "Já tenho conta" else "Criar conta")
+        }
+    }
+
+    // Limpar mensagens após um tempo
+    LaunchedEffect(successMessage, errorMessage) {
+        if (successMessage != null) {
+            kotlinx.coroutines.delay(5000)
+            successMessage = null
+        }
+        if (errorMessage != null) {
+            kotlinx.coroutines.delay(5000)
+            errorMessage = null
         }
     }
 }

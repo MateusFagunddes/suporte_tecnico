@@ -10,5 +10,6 @@ data class ChamadoEntity(
     val descricao: String,
     val status: String,
     val data_abertura: String,
-    val usuario_id: Int?
+    val usuario_id: Int?,
+    val email_usuario: String?
 )

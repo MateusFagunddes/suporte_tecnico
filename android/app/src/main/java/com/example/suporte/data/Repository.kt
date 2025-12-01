@@ -29,7 +29,7 @@ class Repository(context: Context) {
             }
         }
 
-        val entities = list.map { ChamadoEntity(it.id, it.titulo, it.descricao, it.status, it.data_abertura, it.usuario_id) }
+        val entities = list.map { ChamadoEntity(it.id, it.titulo, it.descricao, it.status, it.data_abertura, it.usuario_id, it.email_usuario) }
         dao.clear() // Limpar antes de inserir novos dados filtrados
         dao.insertAll(entities)
     }

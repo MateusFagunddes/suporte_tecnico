@@ -20,6 +20,11 @@ import com.example.suporte.db.ChamadoEntity
 import java.text.SimpleDateFormat
 import java.util.*
 
+// Função utilitária para extrair o prefixo do email (antes do @)
+fun getEmailPrefix(email: String?): String {
+    return email?.substringBefore("@") ?: "N/A"
+}
+
 @Composable
 fun DashboardScreen(vm: MainViewModel, userRole: String = "usuario") {
     val chamados by vm.chamados.collectAsState()
@@ -566,8 +571,8 @@ fun ChamadoItemWithActions(
             if (isTecnico) {
                 Spacer(Modifier.height(4.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    if (chamado.usuario_id != null) {
-                        Text("Usuário ID: ${chamado.usuario_id}", style = MaterialTheme.typography.bodySmall)
+                    if (chamado.email_usuario != null) {
+                        Text("Usuário: ${getEmailPrefix(chamado.email_usuario)}", style = MaterialTheme.typography.bodySmall)
                     }
                     Text("Data: ${formatarDataBR(chamado.data_abertura)}", style = MaterialTheme.typography.bodySmall)
                 }

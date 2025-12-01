@@ -385,4 +385,98 @@ if ($acao == 'excluir_usuario') {
     exit;
 }
 
+// ============ ENDPOINTS PARA GERENCIAMENTO DE STATUS ============
+
+if ($acao == 'listar_status') {
+    $stmt = $pdo->query("SELECT id, nome, ativo FROM status ORDER BY nome");
+    $statusList = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Converter o campo 'ativo' de int para boolean
+    foreach ($statusList as &$status) {
+        $status['ativo'] = (bool)$status['ativo'];
+    }
+
+    echo json_encode($statusList);
+    exit;
+}
+
+if ($acao == 'criar_status') {
+    $nome = trim($_POST['nome'] ?? '');
+    $ativo = isset($_POST['ativo']) ? ($_POST['ativo'] === 'true' ? 1 : 0) : 1;
+
+    if (empty($nome)) {
+        echo json_encode(['error' => 'Nome é obrigatório']);
+        exit;
+    }
+
+    try {
+        $stmt = $pdo->prepare("INSERT INTO status (nome, ativo) VALUES (?, ?)");
+        $ok = $stmt->execute([$nome, $ativo]);
+        echo json_encode(['status' => $ok ? 'ok' : 'error']);
+    } catch (PDOException $e) {
+        // Verificar se é erro de duplicata
+        if ($e->errorInfo[1] == 1062) {
+            echo json_encode(['error' => 'Status já existe']);
+        } else {
+            echo json_encode(['error' => 'Erro ao criar status']);
+        }
+    }
+    exit;
+}
+
+if ($acao == 'atualizar_status') {
+    $id = $_POST['id'] ?? '';
+    $nome = trim($_POST['nome'] ?? '');
+    $ativo = isset($_POST['ativo']) ? ($_POST['ativo'] === 'true' ? 1 : 0) : 1;
+
+    if (empty($id) || empty($nome)) {
+        echo json_encode(['error' => 'ID e nome são obrigatórios']);
+        exit;
+    }
+
+    try {
+        $stmt = $pdo->prepare("UPDATE status SET nome = ?, ativo = ? WHERE id = ?");
+        $ok = $stmt->execute([$nome, $ativo, $id]);
+        echo json_encode(['status' => $ok ? 'ok' : 'error']);
+    } catch (PDOException $e) {
+        if ($e->errorInfo[1] == 1062) {
+            echo json_encode(['error' => 'Status já existe']);
+        } else {
+            echo json_encode(['error' => 'Erro ao atualizar status']);
+        }
+    }
+    exit;
+}
+
+if ($acao == 'excluir_status') {
+    $id = $_POST['id'] ?? '';
+
+    if (empty($id)) {
+        echo json_encode(['error' => 'ID é obrigatório']);
+        exit;
+    }
+
+    // Verificar se o status está sendo usado em chamados
+    $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM chamados WHERE status = (SELECT nome FROM status WHERE id = ?)");
+    $stmt->execute([$id]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($result['total'] > 0) {
+        echo json_encode(['error' => 'Não é possível excluir status que está sendo usado em chamados']);
+        exit;
+    }
+
+    $stmt = $pdo->prepare("DELETE FROM status WHERE id = ?");
+    $ok = $stmt->execute([$id]);
+    echo json_encode(['status' => $ok ? 'ok' : 'error']);
+    exit;
+}
+
+if ($acao == 'listar_status_ativos') {
+    $stmt = $pdo->query("SELECT nome FROM status WHERE ativo = TRUE ORDER BY nome");
+    $status = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    echo json_encode($status);
+    exit;
+}
+
 echo json_encode(['error' => 'acao inválida']);

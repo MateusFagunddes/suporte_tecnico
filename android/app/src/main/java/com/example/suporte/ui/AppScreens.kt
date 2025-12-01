@@ -147,7 +147,8 @@ fun DashboardScreen(vm: MainViewModel, userRole: String = "usuario") {
                                 vm.excluirChamado(chamado.id) { success ->
                                     // Chamado excluído
                                 }
-                            }
+                            },
+                            vm = vm
                         )
                     } else {
                         ChamadoItemWithActions(
@@ -163,7 +164,8 @@ fun DashboardScreen(vm: MainViewModel, userRole: String = "usuario") {
                                 vm.excluirChamado(chamado.id) { success ->
                                     // Chamado excluído
                                 }
-                            }
+                            },
+                            vm = vm
                         )
                     }
                 }
@@ -260,7 +262,8 @@ fun ChamadosScreen(vm: MainViewModel, userRole: String = "usuario") {
                                 vm.excluirChamado(chamado.id) { success ->
                                     // Chamado excluído
                                 }
-                            }
+                            },
+                            vm = vm
                         )
                     } else {
                         ChamadoItemWithActions(
@@ -276,7 +279,8 @@ fun ChamadosScreen(vm: MainViewModel, userRole: String = "usuario") {
                                 vm.excluirChamado(chamado.id) { success ->
                                     // Chamado excluído
                                 }
-                            }
+                            },
+                            vm = vm
                         )
                     }
                 }
@@ -465,12 +469,25 @@ fun ChamadoItemWithActions(
     currentUserId: Int,
     onStatusChange: (String) -> Unit = {},
     onEdit: (String, String) -> Unit = { _, _ -> },
-    onDelete: () -> Unit = {}
+    onDelete: () -> Unit = {},
+    vm: MainViewModel? = null
 ) {
     var showDropdown by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
-    val statusOptions = listOf("aberto", "em andamento", "resolvido")
+    var statusOptions by remember { mutableStateOf<List<String>>(emptyList()) }
+
+    // Carregar status dinamicamente
+    LaunchedEffect(showDropdown) {
+        if (showDropdown && vm != null) {
+            try {
+                statusOptions = vm.listarStatusAtivos()
+            } catch (e: Exception) {
+                // Fallback para status padrão em caso de erro
+                statusOptions = listOf("aberto", "em andamento", "resolvido")
+            }
+        }
+    }
 
     // Verificar permissões
     val podeEditarExcluir = if (isTecnico) {

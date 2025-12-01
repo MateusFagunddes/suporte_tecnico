@@ -79,4 +79,17 @@ class Repository(context: Context) {
         api.editarUsuario(usuarioId, nome, email, senha, role)
 
     suspend fun excluirUsuario(usuarioId: Int) = api.excluirUsuario(usuarioId)
+
+    // === CRUD de Status ===
+    suspend fun listarStatus() = api.listarStatus()
+
+    suspend fun listarStatusAtivos() = api.listarStatusAtivos()
+
+    suspend fun criarStatus(nome: String, ativo: Boolean = true) =
+        api.criarStatus(nome, ativo)
+
+    suspend fun atualizarStatus(id: Int, nome: String, ativo: Boolean) =
+        api.atualizarStatus(id, nome, ativo)
+
+    suspend fun excluirStatus(id: Int) = api.excluirStatus(id)
 }

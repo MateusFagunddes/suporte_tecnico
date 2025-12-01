@@ -42,12 +42,15 @@ fun Sidebar(
         MenuItem("Chamados", Icons.Default.List, "chamados"),
         MenuItem("Novo Chamado", Icons.Default.Add, "novo_chamado"),
         // MenuItem("Relatórios", Icons.Default.Info, "relatorios"),
-        MenuItem("Configurações", Icons.Default.Settings, "configuracoes"),
+        // MenuItem("Configurações", Icons.Default.Settings, "configuracoes"),
     )
 
-    // Adicionar "Gerenciar Usuários" apenas para técnicos
+    // Adicionar "Gerenciar Usuários" e "Gerenciar Status" apenas para técnicos
     val menuItems = if (userRole == "tecnico") {
-        baseMenuItems + MenuItem("Gerenciar Usuários", Icons.Default.AccountCircle, "usuarios")
+        baseMenuItems + listOf(
+            MenuItem("Gerenciar Usuários", Icons.Default.AccountCircle, "usuarios"),
+            MenuItem("Gerenciar Status", Icons.Default.Info, "status")
+        )
     } else {
         baseMenuItems
     }

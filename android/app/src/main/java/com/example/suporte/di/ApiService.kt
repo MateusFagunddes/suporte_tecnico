@@ -98,4 +98,33 @@ interface ApiService {
     suspend fun excluirUsuario(
         @Field("usuario_id") usuarioId: Int
     ): Map<String, Any>
+
+    // ============ ENDPOINTS PARA GERENCIAMENTO DE STATUS ============
+
+    @GET("api.php?acao=listar_status")
+    suspend fun listarStatus(): List<com.example.suporte.model.Status>
+
+    @GET("api.php?acao=listar_status_ativos")
+    suspend fun listarStatusAtivos(): List<String>
+
+    @FormUrlEncoded
+    @POST("api.php?acao=criar_status")
+    suspend fun criarStatus(
+        @Field("nome") nome: String,
+        @Field("ativo") ativo: Boolean = true
+    ): Map<String, Any>
+
+    @FormUrlEncoded
+    @POST("api.php?acao=atualizar_status")
+    suspend fun atualizarStatus(
+        @Field("id") id: Int,
+        @Field("nome") nome: String,
+        @Field("ativo") ativo: Boolean
+    ): Map<String, Any>
+
+    @FormUrlEncoded
+    @POST("api.php?acao=excluir_status")
+    suspend fun excluirStatus(
+        @Field("id") id: Int
+    ): Map<String, Any>
 }

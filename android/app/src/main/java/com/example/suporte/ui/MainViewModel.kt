@@ -122,4 +122,17 @@ class MainViewModel(private val context: Context) : ViewModel() {
         repo.editarUsuario(usuarioId, nome, email, senha, role)
 
     suspend fun excluirUsuario(usuarioId: Int) = repo.excluirUsuario(usuarioId)
+
+    // === Métodos para Gerenciamento de Status ===
+    suspend fun listarStatus() = repo.listarStatus()
+
+    suspend fun listarStatusAtivos() = repo.listarStatusAtivos()
+
+    suspend fun criarStatus(nome: String, ativo: Boolean = true) =
+        repo.criarStatus(nome, ativo)
+
+    suspend fun atualizarStatus(id: Int, nome: String, ativo: Boolean) =
+        repo.atualizarStatus(id, nome, ativo)
+
+    suspend fun excluirStatus(id: Int) = repo.excluirStatus(id)
 }

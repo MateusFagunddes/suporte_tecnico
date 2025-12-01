@@ -190,6 +190,28 @@ fun AppNavHost() {
             }
         }
 
+        composable("status") {
+            currentRoute = "status"
+            MainLayout(
+                currentRoute = currentRoute,
+                onNavigate = { route ->
+                    currentRoute = route
+                    nav.navigate(route) {
+                        popUpTo("main") { inclusive = false }
+                        launchSingleTop = true
+                    }
+                },
+                onLogoff = {
+                    currentRoute = "login"
+                    nav.navigate("login") {
+                        popUpTo("main") { inclusive = true }
+                    }
+                }
+            ) {
+                GerenciamentoStatusScreen(vm = vm)
+            }
+        }
+
         composable("ajuda") {
             currentRoute = "ajuda"
             MainLayout(

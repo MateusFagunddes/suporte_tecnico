@@ -159,6 +159,37 @@ fun AppNavHost() {
             }
         }
 
+        composable("usuarios") {
+            currentRoute = "usuarios"
+            MainLayout(
+                currentRoute = currentRoute,
+                onNavigate = { route ->
+                    currentRoute = route
+                    nav.navigate(route) {
+                        popUpTo("main") { inclusive = false }
+                        launchSingleTop = true
+                    }
+                },
+                onLogoff = {
+                    currentRoute = "login"
+                    nav.navigate("login") {
+                        popUpTo("main") { inclusive = true }
+                    }
+                }
+            ) {
+                GerenciamentoUsuariosScreen(
+                    vm = vm,
+                    onNavigateBack = {
+                        currentRoute = "main"
+                        nav.navigate("main") {
+                            popUpTo("main") { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+        }
+
         composable("ajuda") {
             currentRoute = "ajuda"
             MainLayout(

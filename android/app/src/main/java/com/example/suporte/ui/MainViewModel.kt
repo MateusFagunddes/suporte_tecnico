@@ -111,4 +111,15 @@ class MainViewModel(private val context: Context) : ViewModel() {
             }
         }
     }
+
+    // === Métodos para Gerenciamento de Usuários ===
+    suspend fun listarUsuarios() = repo.listarUsuarios()
+
+    suspend fun criarUsuario(nome: String, email: String, senha: String, role: String) =
+        repo.criarUsuario(nome, email, senha, role)
+
+    suspend fun editarUsuario(usuarioId: Int, nome: String, email: String, senha: String, role: String) =
+        repo.editarUsuario(usuarioId, nome, email, senha, role)
+
+    suspend fun excluirUsuario(usuarioId: Int) = repo.excluirUsuario(usuarioId)
 }

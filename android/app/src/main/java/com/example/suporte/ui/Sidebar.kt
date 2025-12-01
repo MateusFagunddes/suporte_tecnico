@@ -35,15 +35,22 @@ fun Sidebar(
     val prefs = context.getSharedPreferences("suporte_prefs", android.content.Context.MODE_PRIVATE)
     val userName = prefs.getString("user_name", "Usuário") ?: "Usuário"
     val userEmail = prefs.getString("user_email", "") ?: ""
+    val userRole = prefs.getString("user_role", "usuario") ?: "usuario"
 
-    val menuItems = listOf(
+    val baseMenuItems = listOf(
         MenuItem("Dashboard", Icons.Default.Home, "main"),
         MenuItem("Chamados", Icons.Default.List, "chamados"),
         MenuItem("Novo Chamado", Icons.Default.Add, "novo_chamado"),
         MenuItem("Relatórios", Icons.Default.Info, "relatorios"),
         MenuItem("Configurações", Icons.Default.Settings, "configuracoes"),
-        // MenuItem("Ajuda", Icons.Default.Help, "ajuda")
     )
+
+    // Adicionar "Gerenciar Usuários" apenas para técnicos
+    val menuItems = if (userRole == "tecnico") {
+        baseMenuItems + MenuItem("Gerenciar Usuários", Icons.Default.AccountCircle, "usuarios")
+    } else {
+        baseMenuItems
+    }
 
     Surface(
         modifier = modifier.fillMaxHeight(),

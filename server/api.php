@@ -289,4 +289,100 @@ if ($acao == 'salvar_fcm_token') {
     exit;
 }
 
+// === CRUD de Usuários ===
+
+if ($acao == 'listar_usuarios') {
+    // Apenas usuários técnicos podem listar usuários (implementar verificação se necessário)
+    $stmt = $pdo->query("SELECT id, nome, email, role FROM usuarios ORDER BY nome");
+    echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+    exit;
+}
+
+if ($acao == 'criar_usuario') {
+    $nome = $_POST['nome'] ?? '';
+    $email = $_POST['email'] ?? '';
+    $senha = $_POST['senha'] ?? '';
+    $role = $_POST['role'] ?? 'usuario';
+
+    if (!$nome || !$email || !$senha) {
+        echo json_encode(['status' => 'error', 'message' => 'Dados obrigatórios ausentes']);
+        exit;
+    }
+
+    // Verificar se email já existe
+    $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE email = ?");
+    $stmt->execute([$email]);
+    if ($stmt->fetch()) {
+        echo json_encode(['status' => 'error', 'message' => 'Email já cadastrado']);
+        exit;
+    }
+
+    $stmt = $pdo->prepare("INSERT INTO usuarios (nome, email, senha, role) VALUES (?, ?, ?, ?)");
+    try {
+        $ok = $stmt->execute([$nome, $email, $senha, $role]);
+        $id = $pdo->lastInsertId();
+        echo json_encode(['status' => $ok ? 'ok' : 'error', 'id' => $id]);
+    } catch (PDOException $e) {
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    }
+    exit;
+}
+
+if ($acao == 'editar_usuario') {
+    $usuario_id = $_POST['usuario_id'] ?? '';
+    $nome = $_POST['nome'] ?? '';
+    $email = $_POST['email'] ?? '';
+    $senha = $_POST['senha'] ?? '';
+    $role = $_POST['role'] ?? 'usuario';
+
+    if (!$usuario_id || !$nome || !$email) {
+        echo json_encode(['status' => 'error', 'message' => 'Dados obrigatórios ausentes']);
+        exit;
+    }
+
+    // Verificar se email já existe em outro usuário
+    $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE email = ? AND id != ?");
+    $stmt->execute([$email, $usuario_id]);
+    if ($stmt->fetch()) {
+        echo json_encode(['status' => 'error', 'message' => 'Email já cadastrado para outro usuário']);
+        exit;
+    }
+
+    // Atualizar com ou sem senha
+    if (!empty($senha)) {
+        $stmt = $pdo->prepare("UPDATE usuarios SET nome = ?, email = ?, senha = ?, role = ? WHERE id = ?");
+        $ok = $stmt->execute([$nome, $email, $senha, $role, $usuario_id]);
+    } else {
+        $stmt = $pdo->prepare("UPDATE usuarios SET nome = ?, email = ?, role = ? WHERE id = ?");
+        $ok = $stmt->execute([$nome, $email, $role, $usuario_id]);
+    }
+
+    echo json_encode(['status' => $ok ? 'ok' : 'error']);
+    exit;
+}
+
+if ($acao == 'excluir_usuario') {
+    $usuario_id = $_POST['usuario_id'] ?? '';
+
+    if (!$usuario_id) {
+        echo json_encode(['status' => 'error', 'message' => 'ID do usuário obrigatório']);
+        exit;
+    }
+
+    // Verificar se usuário tem chamados associados
+    $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM chamados WHERE usuario_id = ?");
+    $stmt->execute([$usuario_id]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($result['total'] > 0) {
+        echo json_encode(['status' => 'error', 'message' => 'Usuário possui chamados associados. Não é possível excluir.']);
+        exit;
+    }
+
+    $stmt = $pdo->prepare("DELETE FROM usuarios WHERE id = ?");
+    $ok = $stmt->execute([$usuario_id]);
+    echo json_encode(['status' => $ok ? 'ok' : 'error']);
+    exit;
+}
+
 echo json_encode(['error' => 'acao inválida']);

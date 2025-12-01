@@ -1,6 +1,7 @@
 package com.example.suporte.di
 
 import com.example.suporte.model.Chamado
+import com.example.suporte.model.Usuario
 import retrofit2.http.*
 
 interface ApiService {
@@ -65,5 +66,36 @@ interface ApiService {
     suspend fun salvarFcmToken(
         @Field("usuario_id") usuarioId: Int,
         @Field("fcm_token") fcmToken: String
+    ): Map<String, Any>
+
+    // === CRUD de Usuários ===
+    @GET("api.php")
+    suspend fun listarUsuarios(
+        @Query("acao") acao: String = "listar_usuarios"
+    ): List<Usuario>
+
+    @FormUrlEncoded
+    @POST("api.php?acao=criar_usuario")
+    suspend fun criarUsuario(
+        @Field("nome") nome: String,
+        @Field("email") email: String,
+        @Field("senha") senha: String,
+        @Field("role") role: String
+    ): Map<String, Any>
+
+    @FormUrlEncoded
+    @POST("api.php?acao=editar_usuario")
+    suspend fun editarUsuario(
+        @Field("usuario_id") usuarioId: Int,
+        @Field("nome") nome: String,
+        @Field("email") email: String,
+        @Field("senha") senha: String,
+        @Field("role") role: String
+    ): Map<String, Any>
+
+    @FormUrlEncoded
+    @POST("api.php?acao=excluir_usuario")
+    suspend fun excluirUsuario(
+        @Field("usuario_id") usuarioId: Int
     ): Map<String, Any>
 }

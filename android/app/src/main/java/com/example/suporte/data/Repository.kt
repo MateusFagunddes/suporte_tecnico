@@ -68,4 +68,15 @@ class Repository(context: Context) {
     }
 
     suspend fun salvarFcmToken(usuarioId: Int, token: String) = api.salvarFcmToken(usuarioId, token)
+
+    // === CRUD de Usuários ===
+    suspend fun listarUsuarios() = api.listarUsuarios()
+
+    suspend fun criarUsuario(nome: String, email: String, senha: String, role: String) =
+        api.criarUsuario(nome, email, senha, role)
+
+    suspend fun editarUsuario(usuarioId: Int, nome: String, email: String, senha: String, role: String) =
+        api.editarUsuario(usuarioId, nome, email, senha, role)
+
+    suspend fun excluirUsuario(usuarioId: Int) = api.excluirUsuario(usuarioId)
 }
